@@ -1,0 +1,32 @@
+{
+  "name": "tw3-token",
+  "version": "1.0.0",
+  "description": "TW3 Token example",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx hardhat test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TechnicallyWeb3/tw3-token.git"
+  },
+  "keywords": [
+    "TW3",
+    "token",
+    "erc20",
+    "dao"
+  ],
+  "author": "TechnicallyWeb3",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/TechnicallyWeb3/tw3-token/issues"
+  },
+  "homepage": "https://github.com/TechnicallyWeb3/tw3-token#readme",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "hardhat": "^2.26.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0"
+  }
+}
