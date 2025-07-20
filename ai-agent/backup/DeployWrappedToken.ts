@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { checkBalance } from "./CheckBalance";
+import { checkBalance } from "../../scripts/CheckBalance";
 
 async function main() {
   console.log("🚀 Deploying WrappedToken using Ignition...");
@@ -13,7 +13,7 @@ async function main() {
   
   try {
     // Import and use the existing Ignition module
-    const WrappedTokenModule = await import("../ignition/modules/WrappedToken");
+    const WrappedTokenModule = await import("../../ignition/modules/WrappedToken");
     const module = WrappedTokenModule.default;
     
     // For now, let's use the standard Ignition CLI approach but with better integration

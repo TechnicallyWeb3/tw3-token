@@ -24,6 +24,7 @@
   "homepage": "https://github.com/TechnicallyWeb3/tw3-token#readme",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "dotenv": "^17.2.0",
     "hardhat": "^2.26.0"
   },
   "dependencies": {

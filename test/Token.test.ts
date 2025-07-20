@@ -76,4 +76,105 @@ describe("WrappedToken", function () {
         expect(await wrappedToken.balanceOf(user3.address)).to.equal(0);
         expect(await wrappedToken.totalSupply()).to.equal(0n);
     });
+
+    it("should wrap tokens when ether is sent directly to contract via receive()", async function () {
+        const sendAmount = hre.ethers.parseEther("2.5");
+        const initialBalance = await wrappedToken.balanceOf(user1.address);
+        const initialTotalSupply = await wrappedToken.totalSupply();
+
+        // Send ether directly to the contract address
+        const tx = await user1.sendTransaction({
+            to: wrappedToken.target,
+            value: sendAmount
+        });
+        await tx.wait();
+
+        // Verify tokens were minted to the sender
+        expect(await wrappedToken.balanceOf(user1.address)).to.equal(initialBalance + sendAmount);
+        expect(await wrappedToken.totalSupply()).to.equal(initialTotalSupply + sendAmount);
+    });
+
+    it("should reject zero value transactions via receive()", async function () {
+        // Try to send 0 ether directly to the contract
+        await expect(
+            user1.sendTransaction({
+                to: wrappedToken.target,
+                value: 0
+            })
+        ).to.be.revertedWith("Amount must be greater than 0");
+    });
+
+    it("should automatically unwrap tokens when transferred to contract via transfer()", async function () {
+        // First wrap some tokens
+        const wrapAmount = hre.ethers.parseEther("1.0");
+        const wrapTx = await wrappedToken.connect(user1).wrap({ value: wrapAmount });
+        await wrapTx.wait();
+
+        const initialBalance = await wrappedToken.balanceOf(user1.address);
+        const initialContractBalance = await hre.ethers.provider.getBalance(wrappedToken.target);
+        const initialUserEthBalance = await hre.ethers.provider.getBalance(user1.address);
+
+        // Transfer tokens to the contract (should auto-unwrap)
+        const transferAmount = hre.ethers.parseEther("0.5");
+        const transferTx = await wrappedToken.connect(user1).transfer(wrappedToken.target, transferAmount);
+        await transferTx.wait();
+
+        // Verify tokens were burned
+        expect(await wrappedToken.balanceOf(user1.address)).to.equal(initialBalance - transferAmount);
+        expect(await wrappedToken.totalSupply()).to.equal(initialBalance - transferAmount);
+
+        // Verify ether was sent back to user
+        expect(await hre.ethers.provider.getBalance(wrappedToken.target)).to.equal(initialContractBalance - transferAmount);
+        expect(await hre.ethers.provider.getBalance(user1.address)).to.be.greaterThan(initialUserEthBalance);
+    });
+
+    it("should automatically unwrap tokens when transferred to contract via transferFrom()", async function () {
+        // First wrap some tokens for user2
+        const wrapAmount = hre.ethers.parseEther("1.0");
+        const wrapTx = await wrappedToken.connect(user2).wrap({ value: wrapAmount });
+        await wrapTx.wait();
+
+        // Approve user1 to spend user2's tokens
+        const approveTx = await wrappedToken.connect(user2).approve(user1.address, wrapAmount);
+        await approveTx.wait();
+
+        const initialBalance = await wrappedToken.balanceOf(user2.address);
+        const initialContractBalance = await hre.ethers.provider.getBalance(wrappedToken.target);
+        const initialUser2EthBalance = await hre.ethers.provider.getBalance(user2.address);
+        const initialTotalSupply = await wrappedToken.totalSupply();
+
+        // Transfer tokens from user2 to contract via user1 (should auto-unwrap)
+        const transferAmount = hre.ethers.parseEther("0.5");
+        const transferFromTx = await wrappedToken.connect(user1).transferFrom(user2.address, wrappedToken.target, transferAmount);
+        await transferFromTx.wait();
+
+        // Verify tokens were burned from user2
+        expect(await wrappedToken.balanceOf(user2.address)).to.equal(initialBalance - transferAmount);
+        expect(await wrappedToken.totalSupply()).to.equal(initialTotalSupply - transferAmount);
+
+        // Verify ether was sent back to user2 (the token owner)
+        expect(await hre.ethers.provider.getBalance(wrappedToken.target)).to.equal(initialContractBalance - transferAmount);
+        expect(await hre.ethers.provider.getBalance(user2.address)).to.be.greaterThan(initialUser2EthBalance);
+    });
+
+    it("should work normally when transferring to other addresses", async function () {
+        // First wrap some tokens
+        const wrapAmount = hre.ethers.parseEther("1.0");
+        const wrapTx = await wrappedToken.connect(user1).wrap({ value: wrapAmount });
+        await wrapTx.wait();
+
+        const initialUser1Balance = await wrappedToken.balanceOf(user1.address);
+        const initialUser2Balance = await wrappedToken.balanceOf(user2.address);
+        const initialTotalSupply = await wrappedToken.totalSupply();
+
+        // Transfer tokens to user2 (should work normally)
+        const transferAmount = hre.ethers.parseEther("0.3");
+        const transferTx = await wrappedToken.connect(user1).transfer(user2.address, transferAmount);
+        await transferTx.wait();
+
+        // Verify normal transfer behavior
+        expect(await wrappedToken.balanceOf(user1.address)).to.equal(initialUser1Balance - transferAmount);
+        expect(await wrappedToken.balanceOf(user2.address)).to.equal(initialUser2Balance + transferAmount);
+        expect(await wrappedToken.totalSupply()).to.equal(initialTotalSupply); // Total supply unchanged
+    });
 });

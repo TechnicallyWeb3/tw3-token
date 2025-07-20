@@ -1,0 +1,10 @@
+{
+  "$global": {
+    "tokenName": "Technically Web3 Wrapped Sepolia",
+    "tokenSymbol": "tw3TEST"
+  },
+  "WrappedTokenModule": {
+    "tokenName": "Technically Web3 Wrapped Sepolia",
+    "tokenSymbol": "tw3TEST"
+  }
+} 

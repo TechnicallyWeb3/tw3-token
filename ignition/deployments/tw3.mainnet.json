@@ -1,0 +1,10 @@
+{
+  "$global": {
+    "tokenName": "TW3 Wrapped ETH",
+    "tokenSymbol": "tw3ETH"
+  },
+  "WrappedTokenModule": {
+    "tokenName": "TW3 Wrapped ETH",
+    "tokenSymbol": "tw3ETH"
+  }
+} 
